@@ -1,168 +1,342 @@
 document.addEventListener("DOMContentLoaded", ready);
-
+let currentLanguage = 'ru';
 function ready() {
     let wrapper = document.createElement('div');
     let textarea = document.createElement('textarea');
     wrapper.className = 'wrapper';
     document.body.append(wrapper);
     wrapper.append(textarea);
-    let keyboard = new Keyboard(wrapper, 'ru');
+    let keyboard = new Keyboard(wrapper);
     keyboard.create();
+    document.onkeydown = function (e) {
+        if(e.shiftKey && e.altKey) {  
+             currentLanguage = currentLanguage === 'ru' ? 'en' : 'ru';
+             keyboard.changeLanguage();
+        }
+        if(!e.repeat && keyboard.map.has(e.code)) {
+            let key = keyboard.map.get(e.code);
+            if(key !== undefined && (!keyboard.isCapsLockOn || key.code !== 'CapsLock'))
+                key.domElement.className += ' on-key-press';
+        }
+        if(e.code === 'CapsLock'){
+            let key = keyboard.map.get(e.code);
+            if(keyboard.isCapsLockOn) {
+                key.domElement.className = key.domElement.className.replace(' on-key-press', '');
+                keyboard.isCapsLockOn = false;
+            }
+            else
+                keyboard.isCapsLockOn = true;
+        }
+    }
+    document.onkeyup = function (e) {
+        if(!keyboard.map.has(e.code) ||  e.code === 'CapsLock') return;
+        let key = keyboard.map.get(e.code);
+        if(key !== undefined)
+            key.domElement.className = key.domElement.className.replace(' on-key-press', '');
+    }
 }
 
 class Keyboard {
-    constructor(wrapper, language, keyboardConstruction = null) {
+    constructor(wrapper, keyboardConstruction = null) {
         this.wrapper = wrapper;
-        this.language = language;
         this.keyboardConstruction = keyboardConstruction || (new KeyboardConstruction());
         this.keyboard = document.createElement('div');
         this.keyboard.className = 'keyboard';
         this.wrapper.append(this.keyboard);
+        this.map = new Map();
+        this.isCapsLockOn = false;
     }
 
     create() {
-        for(let [name, lineValue] of Object.entries(this.keyboardConstruction)) {
+        for(let line of this.keyboardConstruction.allLines) {
             let keyboardLine = document.createElement('div');
             keyboardLine.className = 'line';
             this.keyboard.append(keyboardLine);
-            for(let item of lineValue) {
-                let key = document.createElement('div');
-                key.onmouseup = function(e){
-                    let textarea = document.getElementsByTagName('textarea')[0];
-                    if(e.shiftKey)
-                        textarea.value += key.getElementsByTagName('sup')[0].textContent;
-                    else
-                        textarea.value += key.textContent;
-                    console.log(e);
-                };
-                key.className = 'key';
-                if(item[0] === 'Space') key.className += ' space';
-                let keyValue = this.language === 'ru' ? item[1][0] : item[1][1];
-                if(keyValue.upperValue !== null) {
-                    if((item[0] === 'Backquote' || item[0] === 'Minus' || item[0] === 'Equal') 
-                    && this.language === 'en')
-                        key.innerHTML = `${keyValue.value}<sup><sup>${keyValue.upperValue}</sup></sup>`;
-                    else
-                        key.innerHTML = `${keyValue.value}<sup>${keyValue.upperValue}</sup>`;
-                }
-                else {
-                    if(item[0] === 'ArrowUp' || item[0] === 'ArrowDown'){
-                        let isGroupElementExist = document.getElementsByClassName('arrow-group').length !== 0;
-                        let keyGroup = '';
-                        if(!isGroupElementExist)
-                            keyGroup = document.createElement('div');
-                        else
-                            keyGroup = document.getElementsByClassName('arrow-group')[0];
-                        keyGroup.className = 'arrow-group sys';
-                        if(!isGroupElementExist)
-                            keyboardLine.append(keyGroup);
-                        key.className = item[0] === 'ArrowUp' ? 'upper-arrow' : 'down-arrow';
-                        key.innerHTML = `${keyValue.value}`;
-                        keyGroup.appendChild(key);
-                        continue;
-                    }
-                    else
-                        key.innerHTML = `${keyValue.value}`;
-                }
-                if(keyValue.isSystemType)
-                    key.className += ' sys ' + keyValue.value.replace(/ /g, '-').toLowerCase(); 
-                keyboardLine.append(key);
+            for(let item of line) {
+                keyboardLine.append(item.getDOMElement());
+                item.setMouseEvent(this);
+                if(item instanceof GroupKeyConstruction) {
+                    this.map.set(item.element1.code, item.element1);
+                    this.map.set(item.element2.code, item.element2);
+                }  
+                else
+                    this.map.set(item.code, item);
             }
         }
     }
 
     changeLanguage() {
-
+        for(let  line of this.keyboardConstruction.allLines) {
+            for(let item of line) {
+                item.changeLanguage();
+            }
+        }
     }
 }
 
 class KeyboardConstruction {
     constructor() {
-        this.line1 = new Map([
-            ['Backquote', [ new keyValue('Ё'), new keyValue('`', '~')]],
-            ['Digit1', [ new keyValue('1', '!'), new keyValue('1', '!')]],
-            ['Digit2', [ new keyValue('2', '"'), new keyValue('2', '@')]],
-            ['Digit3', [ new keyValue('3', '№'), new keyValue('3', '#')]],
-            ['Digit4', [ new keyValue('4', ';'), new keyValue('4', '$')]],
-            ['Digit5', [ new keyValue('5', '%'), new keyValue('5', '%')]],
-            ['Digit6', [ new keyValue('6', ':'), new keyValue('6', '^')]],
-            ['Digit7', [ new keyValue('7', '?'), new keyValue('7', '&')]],
-            ['Digit8', [ new keyValue('8', '*'), new keyValue('8', '*')]],
-            ['Digit9', [ new keyValue('9', '('), new keyValue('9', '(')]],
-            ['Digit0', [ new keyValue('0', ')'), new keyValue('0', ')')]],
-            ['Minus', [ new keyValue('-', '_'), new keyValue('-', '_')]],
-            ['Equal', [ new keyValue('=', '+'), new keyValue('=', '+')]],
-            ['Backspace', [ new keyValue('Backspace', null, true), new keyValue('Backspace', null, true)]]
-        ]);
+        this.line1 = [
+            new KeyConstruction('Backquote',[['Ё'],['`', '~']]),
+            new KeyConstruction('Digit1',[['1', '!'],['1', '!']]),
+            new KeyConstruction('Digit2',[['2', '"'],['2', '@']]),
+            new KeyConstruction('Digit3',[['3', '№'],['3', '#']]),
+            new KeyConstruction('Digit4',[['4', ';'],['4', '$']]),
+            new KeyConstruction('Digit5',[['5', '%'],['5', '%']]),
+            new KeyConstruction('Digit6',[['6', ':'],['6', '^']]),
+            new KeyConstruction('Digit7',[['7', '?'],['7', '&']]),
+            new KeyConstruction('Digit8',[['8', '*'],['8', '*']]),
+            new KeyConstruction('Digit9',[['9', '('],['9', '(']]),
+            new KeyConstruction('Digit0',[['0', ')'],['0', ')']]),
+            new KeyConstruction('Minus',[['-', '_'],['-', '_']]),
+            new KeyConstruction('Equal',[['=', '+'],['=', '+']]),
+            new SystemKeyConstruction('Backspace', 'Backspace')
+        ];
 
-        this.line2 = new Map([
-            ['Tab', [ new keyValue('Tab', null, true), new keyValue('Tab', null, true)]],
-            ['KeyQ', [ new keyValue('Й'), new keyValue('Q')]],
-            ['KeyW', [ new keyValue('Ц'), new keyValue('W')]],
-            ['KeyE', [ new keyValue('У'), new keyValue('E')]],
-            ['KeyR', [ new keyValue('К'), new keyValue('R')]],
-            ['KeyT', [ new keyValue('Е'), new keyValue('T')]],
-            ['KeyY', [ new keyValue('Н'), new keyValue('Y')]],
-            ['KeyU', [ new keyValue('Г'), new keyValue('U')]],
-            ['KeyI', [ new keyValue('Ш'), new keyValue('I')]],
-            ['KeyO', [ new keyValue('Щ'), new keyValue('O')]],
-            ['KeyP', [ new keyValue('З'), new keyValue('P')]],
-            ['BracketLeft', [ new keyValue('Х'), new keyValue('[', '{')]],
-            ['BracketRight', [ new keyValue('Ъ'), new keyValue(']', '}')]],
-            ['Backslash', [ new keyValue('\\', '/'), new keyValue('\\', '|')]],
-            ['Delete', [ new keyValue('Del', null, true), new keyValue('Del', null, true)]]
-        ]);
+        this.line2 = [
+            new SystemKeyConstruction('Tab', 'Tab'),
+            new KeyConstruction('KeyQ',[['Й'],['Q']]),
+            new KeyConstruction('KeyW',[['Ц'],['W']]),
+            new KeyConstruction('KeyE',[['У'],['E']]),
+            new KeyConstruction('KeyR',[['К'],['R']]),
+            new KeyConstruction('KeyT',[['Е'],['T']]),
+            new KeyConstruction('KeyY',[['Н'],['Y']]),
+            new KeyConstruction('KeyU',[['Г'],['U']]),
+            new KeyConstruction('KeyI',[['Ш'],['I']]),
+            new KeyConstruction('KeyO',[['Щ'],['O']]),
+            new KeyConstruction('KeyP',[['З'],['P']]),
+            new KeyConstruction('BracketLeft',[['Х'],['[', '{']]),
+            new KeyConstruction('BracketRight',[['Ъ'],[']', '}']]),
+            new KeyConstruction('Backslash',[['\\', '/'],['\\', '|']]),
+            new SystemKeyConstruction('Delete', 'Del')
+        ];
 
-        this.line3 = new Map([
-            ['CapsLock', [ new keyValue('Caps Lock', null, true), new keyValue('Caps Lock', null, true)]],
-            ['KeyA', [ new keyValue('Ф'), new keyValue('A')]],
-            ['KeyS', [ new keyValue('Ы'), new keyValue('S')]],
-            ['KeyD', [ new keyValue('В'), new keyValue('D')]],
-            ['KeyF', [ new keyValue('А'), new keyValue('F')]],
-            ['KeyG', [ new keyValue('П'), new keyValue('G')]],
-            ['KeyH', [ new keyValue('Р'), new keyValue('H')]],
-            ['KeyJ', [ new keyValue('О'), new keyValue('J')]],
-            ['KeyK', [ new keyValue('Л'), new keyValue('K')]],
-            ['KeyL', [ new keyValue('Д'), new keyValue('L')]],
-            ['Semicolon', [ new keyValue('Ж'), new keyValue(';', ':')]],
-            ['Quote', [ new keyValue('Э'), new keyValue('\'', '"')]],
-            ['Enter', [ new keyValue('Enter', null, true), new keyValue('Enter', null, true)]]
-        ]);
+        this.line3 = [
+            new SystemKeyConstruction('CapsLock', 'Caps Lock'),
+            new KeyConstruction('KeyA',[['Ф'],['A']]),
+            new KeyConstruction('KeyS',[['Ы'],['S']]),
+            new KeyConstruction('KeyD',[['В'],['D']]),
+            new KeyConstruction('KeyF',[['А'],['F']]),
+            new KeyConstruction('KeyG',[['П'],['G']]),
+            new KeyConstruction('KeyH',[['Р'],['H']]),
+            new KeyConstruction('KeyJ',[['О'],['J']]),
+            new KeyConstruction('KeyK',[['Л'],['K']]),
+            new KeyConstruction('KeyL',[['Д'],['L']]),
+            new KeyConstruction('Semicolon',[['Ж'],[';', ':']]),
+            new KeyConstruction('Quote',[['Э'],['\'', '"']]),
+            new SystemKeyConstruction('Enter', 'Enter')
+        ];
 
-        this.line4 = new Map([
-            ['ShiftLeft', [ new keyValue('Shift', null, true), new keyValue('Shift', null, true)]],
-            ['KeyZ', [ new keyValue('Я'), new keyValue('Z')]],
-            ['KeyX', [ new keyValue('Ч'), new keyValue('X')]],
-            ['KeyC', [ new keyValue('С'), new keyValue('C')]],
-            ['KeyV', [ new keyValue('М'), new keyValue('V')]],
-            ['KeyB', [ new keyValue('И'), new keyValue('B')]],
-            ['KeyN', [ new keyValue('Т'), new keyValue('N')]],
-            ['KeyM', [ new keyValue('Ь'), new keyValue('M')]],
-            ['Comma', [ new keyValue('Б'), new keyValue(',', '<')]],
-            ['Period', [ new keyValue('Ю'), new keyValue('.', '>')]],
-            ['Slash', [ new keyValue('.', ','), new keyValue('/', '?')]],
-            ['ShiftRight', [ new keyValue('Shift', null, true), new keyValue('Shift', null, true)]]
-        ]);
+        this.line4 = [
+            new SystemKeyConstruction('ShiftLeft', 'Shift'),
+            new KeyConstruction('KeyZ',[['Я'],['Z']]),
+            new KeyConstruction('KeyX',[['Ч'],['X']]),
+            new KeyConstruction('KeyC',[['С'],['C']]),
+            new KeyConstruction('KeyV',[['М'],['V']]),
+            new KeyConstruction('KeyB',[['И'],['B']]),
+            new KeyConstruction('KeyN',[['Т'],['N']]),
+            new KeyConstruction('KeyM',[['Ь'],['M']]),
+            new KeyConstruction('Comma',[['Б'],[',', '<']]),
+            new KeyConstruction('Period',[['Ю'],['.', '>']]),
+            new KeyConstruction('Slash',[['.', ','],['/', '?']]),
+            new SystemKeyConstruction('ShiftRight', 'Shift')
+        ];
 
-        this.line5 = new Map([
-            ['ControlLeft', [ new keyValue('Ctrl', null, true), new keyValue('Ctrl', null, true)]],
-            ['MetaLeft', [ new keyValue('Win'), new keyValue('Win')]],
-            ['AltLeft', [ new keyValue('Alt'), new keyValue('Alt')]],
-            ['Space', [ new keyValue(''), new keyValue('')]],
-            ['AltRight', [ new keyValue('Alt'), new keyValue('Alt')]],
-            ['ControlRight', [ new keyValue('Ctrl'), new keyValue('Ctrl')]],
-            ['ArrowLeft', [ new keyValue('&#9668;'), new keyValue('&#9668;')]],
-            ['ArrowUp', [ new keyValue('&#9650;'), new keyValue('&#9650;')]],
-            ['ArrowDown', [ new keyValue('&#9660;', null, true), new keyValue('&#9660;', null, true)]],
-            ['ArrowRight', [ new keyValue('&#9658;'), new keyValue('&#9658;')]]
-        ]);
+        this.line5 = [
+            new SystemKeyConstruction('ControlLeft', 'Ctrl'),
+            new SystemKeyConstruction('MetaLeft', 'Win'),
+            new SystemKeyConstruction('AltLeft', 'Alt'),
+            new SystemKeyConstruction('Space', 'Space'),
+            new SystemKeyConstruction('AltRight', 'Alt'),
+            new SystemKeyConstruction('ControlRight', 'Ctrl'),
+            new SystemKeyConstruction('ArrowLeft', '&#9668;'),
+            new GroupKeyConstruction(new SystemKeyConstruction('ArrowUp', '&#9650;'), 'arrow-up', 
+                new SystemKeyConstruction('ArrowDown', '&#9660;'), 'arrow-down'),
+            new SystemKeyConstruction('ArrowRight', '&#9658;'),
+        ];
+
+        this.allLines = [this.line1, this.line2, this.line3, this.line4, this.line5];
+    }
+
+    findKey(code) {
+        for(let line of this.allLines)
+            for(let item of line) {
+                if(item instanceof GroupKeyConstruction) {
+                    if(item.element1.code === code ) return  item.element1;
+                    if(item.element2.code === code ) return  item.element2;
+                }
+                else if(item.code === code)   
+                    return item;
+            }
+    }
+}
+
+class KeyConstruction {
+    constructor(code, data, isSystemType = false) {
+        this.code = code;
+        this.isSystemType = isSystemType;
+        this.localisation = new KeyLocalisation(data);
+        this.domElement = document.createElement('div'); 
+        this.keyValue = {};
+    }
+
+    getDOMElement() {
+        this.domElement.className = 'key';
+        this.createInnerHtml();
+        return this.domElement;
+    }
+
+    changeLanguage() {
+        this.createInnerHtml();
+    }
+
+    createInnerHtml() {
+        this.keyValue = this.localisation.getLoacalisatedKey();
+        if(this.keyValue.upperValue !== null) {
+            if((this.code === 'Backquote' || this.code === 'Minus' || this.code === 'Equal'))
+                this.domElement.innerHTML = `${this.keyValue.value}<sup><sup>${this.keyValue.upperValue}</sup></sup>`;
+            else
+                this.domElement.innerHTML = `${this.keyValue.value}<sup>${this.keyValue.upperValue}</sup>`;
+        } else this.domElement.innerHTML = `${this.keyValue.value}`;
+    }
+
+    setMouseEvent(keyboard) {
+        if(this.domElement === undefined) return;
+
+        this.domElement.blur = (e) => {
+            this.domElement.className = this.domElement.className.replace(/ on-key-press/g, '');
+        }
+        this.domElement.onmousedown = (e) => {
+            this.domElement.className += ' on-key-press';
+        }
+
+        this.domElement.onmouseup = (e) => {
+            this.domElement.className = this.domElement.className.replace(/ on-key-press/g, '');
+            let textarea = document.getElementsByTagName('textarea')[0];
+            let value = ''
+            if(keyboard.isCapsLockOn && this.keyValue.upperValue === null)
+                value = e.shiftKey ? this.keyValue.value.toLowerCase() : this.keyValue.value.toUpperCase();
+            else if(keyboard.isCapsLockOn && this.keyValue.upperValue !== null)
+                value = e.shiftKey ? this.keyValue.upperValue : this.keyValue.value;
+            else if(!keyboard.isCapsLockOn && this.keyValue.upperValue === null)
+                value = e.shiftKey ? this.keyValue.value.toUpperCase() : this.keyValue.value.toLowerCase();
+            else if(!keyboard.isCapsLockOn && this.keyValue.upperValue !== null)
+                value = e.shiftKey ? this.keyValue.upperValue : this.keyValue.value;
+            let arr =  textarea.value.split('')
+            arr.splice(textarea.selectionStart, textarea.selectionEnd -  textarea.selectionStart, value);
+            let position = textarea.selectionStart;
+            textarea.value = arr.join('');
+            textarea.selectionStart = textarea.selectionEnd = position + 1;
+        }
+    }
+}
+
+class SystemKeyConstruction extends KeyConstruction {
+    constructor(code, value) {
+        let data = code === 'Space' ? '' : value;
+        super(code, [[data], [data]], true);
+        this.value = value;
+    }
+
+    getDOMElement() {
+        let domElement = super.getDOMElement();
+        domElement.className += ' sys ' + this.value.replace(/ /g, '-').toLowerCase(); 
+        return domElement;
+    }
+
+    setMouseEvent(keyboard) {
+        if(this.domElement === undefined) return;
+        this.domElement.onmousedown = (e) => {
+            this.domElement.className += ' on-key-press';
+            let textarea = document.getElementsByTagName('textarea')[0];
+            textarea.focus();
+        }
+
+        this.domElement.onmouseup = (e) => {
+            this.domElement.className = this.domElement.className.replace(/ on-key-press/g, '');
+            if(this.code === 'CapsLock' && !keyboard.isCapsLockOn) {
+                this.domElement.className += ' on-key-press';
+                keyboard.isCapsLockOn = true;
+                return;
+            }
+            if(this.code === 'CapsLock' && keyboard.isCapsLockOn) {
+                this.domElement.className = this.domElement.className.replace(' on-key-press', '');
+                keyboard.isCapsLockOn = false;
+                return;
+            }
+            let textarea = document.getElementsByTagName('textarea')[0];
+            let value = '';
+            let deleteCount = textarea.selectionEnd - textarea.selectionStart;
+            if(this.value === 'Tab') value += '\t';
+            if(this.value === 'Enter') value += '\n';
+            if(this.value === 'Backspace' && deleteCount === 0) textarea.selectionStart -= 1;
+            if(this.value === 'Del' && deleteCount === 0) textarea.selectionEnd += 1;
+            if(this.value === 'Space') value += ' ';  
+            if(this.code === 'ArrowLeft') {
+                textarea.selectionStart = textarea.selectionEnd = textarea.selectionStart - 1;
+                return;
+            }
+            if(this.code === 'ArrowRight') {
+                textarea.selectionStart = textarea.selectionEnd = textarea.selectionStart + 1;
+                return;
+            }
+            let arr =  textarea.value.split('');
+            let position = textarea.selectionStart;
+            arr.splice(textarea.selectionStart, textarea.selectionEnd - textarea.selectionStart, value);
+            textarea.value = arr.join('');
+            textarea.selectionStart = textarea.selectionEnd = this.value === 'Del' 
+                || this.value === 'Backspace' ? position : position + 1;
+
+        }
+    }
+}
+
+class GroupKeyConstruction {
+    constructor(key1, className1, key2, className2) {
+        this.element1 = key1;
+        this.element2 = key2;
+        this.className1 = className1;
+        this.className2 = className2;
+    }
+
+    getDOMElement() {
+        let group = document.createElement('div');
+        group.className = 'group-btn';
+        let domElement1 = this.element1.getDOMElement();
+        let domElement2 = this.element2.getDOMElement();
+        domElement1.className = this.className1;
+        domElement2.className = this.className2;
+        group.appendChild(domElement1);
+        group.appendChild(domElement2);
+        return group;
+    }
+
+    changeLanguage() {
+        this.element1.changeLanguage();
+        this.element2.changeLanguage();
+    }
+
+    setMouseEvent() {
+        this.element1.setMouseEvent();
+        this.element2.setMouseEvent();
+    }
+}
+
+class KeyLocalisation {
+    constructor(data) {
+       this.data = data;
+    }
+
+    getLoacalisatedKey() {
+        if(currentLanguage === 'ru')
+            return new keyValue(this.data[0]);
+        return new keyValue(this.data[1]);
     }
 }
 
 class keyValue {
-    constructor(value, upperValue = null, isSystemType = false) {
-        this.value = value;
-        this.upperValue = upperValue;
-        this.isSystemType = isSystemType;
+    constructor(data) {
+        this.value = data[0];
+        this.upperValue = data[1] || null;
     }
 }
