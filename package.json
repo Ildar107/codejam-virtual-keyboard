@@ -1,0 +1,16 @@
+{
+  "name": "codejam-virtual-keyboard",
+  "version": "1.0.0",
+  "description": "rsschool learn project",
+  "main": "index.js",
+  "scripts": {
+    "lint": "eslint"
+  },
+  "author": "Ildar",
+  "license": "ISC",
+  "devDependencies": {
+    "eslint": "^6.6.0",
+    "eslint-config-airbnb-base": "^14.0.0",
+    "eslint-plugin-import": "^2.18.2"
+  }
+}
