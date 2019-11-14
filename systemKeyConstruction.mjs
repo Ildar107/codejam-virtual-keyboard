@@ -1,4 +1,4 @@
-import KeyConstruction from './keyConstruction.js';
+import KeyConstruction from './keyConstruction.mjs';
 
 export default class SystemKeyConstruction extends KeyConstruction {
     constructor(code, value) {
@@ -22,12 +22,16 @@ export default class SystemKeyConstruction extends KeyConstruction {
         }
       };
   
-      this.domElement.onmousedown = () => {
-        this.domElement.className += ' on-key-press';
+      this.domElement.onmousedown = (e) => {
+        if(!e.repeat) {
+          this.domElement.className += ' on-key-press';
+        }
       };
   
       this.domElement.onclick = (e) => {
-        this.domElement.className = this.domElement.className.replace(/ on-key-press/g, '');
+        if(!e.repeat) {
+          this.domElement.className = this.domElement.className.replace(/ on-key-press/g, '');
+        }
         const keyboardInner = keyboard;
         if (e.ctrlKey || e.altKey) { return; }
         if (this.code === 'CapsLock' && !keyboard.isCapsLockOn) {

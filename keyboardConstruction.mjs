@@ -1,6 +1,6 @@
-import KeyConstruction from './keyConstruction.js';
-import GroupKeyConstruction from './groupKeyConstruction.js';
-import SystemKeyConstruction from './systemKeyConstruction.js';
+import KeyConstruction from './keyConstruction.mjs';
+import GroupKeyConstruction from './groupKeyConstruction.mjs';
+import SystemKeyConstruction from './systemKeyConstruction.mjs';
 
 export default class KeyboardConstruction {
     constructor() {

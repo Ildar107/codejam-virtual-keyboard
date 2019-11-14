@@ -1,4 +1,4 @@
-import KeyLocalisation from './keyLocalisation.js';
+import KeyLocalisation from './keyLocalisation.mjs';
 
 export default class KeyConstruction {
     constructor(code, data, isSystemType = false) {
@@ -37,12 +37,16 @@ export default class KeyConstruction {
         this.domElement.className = this.domElement.className.replace(/ on-key-press/g, '');
       };
   
-      this.domElement.onmousedown = () => {
-        this.domElement.className += ' on-key-press';
+      this.domElement.onmousedown = (e) => {
+        if(!e.repeat) {
+          this.domElement.className += ' on-key-press';
+        }
       };
   
       this.domElement.onclick = (e) => {
-        this.domElement.className = this.domElement.className.replace(/ on-key-press/g, '');
+        if(!e.repeat) {
+          this.domElement.className = this.domElement.className.replace(/ on-key-press/g, '');
+        }
         if (e.ctrlKey || e.altKey) { return; }
         const textarea = document.getElementsByTagName('textarea')[0];
         let value = '';

@@ -1,4 +1,4 @@
-import Keyboard from './keyboard.js';
+import Keyboard from './keyboard.mjs';
 
 function ready() {
   if (!localStorage.getItem('currentLanguage')) {
@@ -16,9 +16,11 @@ function ready() {
       localStorage.setItem('currentLanguage', localStorage.getItem('currentLanguage') === 'ru' ? 'en' : 'ru');
       keyboard.changeLanguage();
     }
-    if (!e.repeat && keyboard.map.has(e.code)) {
+    if (keyboard.map.has(e.code)) {
       const key = keyboard.map.get(e.code);
       key.domElement.onmousedown(e);
+      if(e.repeat)
+        key.domElement.onclick(e);
       if (!e.altKey && !e.ctrlKey) {
         e.preventDefault();
       }

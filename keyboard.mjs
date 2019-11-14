@@ -1,6 +1,6 @@
 
-import GroupKeyConstruction from './groupKeyConstruction.js';
-import KeyboardConstruction from './keyboardConstruction.js';
+import GroupKeyConstruction from './groupKeyConstruction.mjs';
+import KeyboardConstruction from './keyboardConstruction.mjs';
 
 export default class Keyboard {
     constructor(wrapper, keyboardConstruction = null) {

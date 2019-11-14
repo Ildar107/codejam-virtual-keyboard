@@ -1,4 +1,4 @@
-import KeyValue from './keyvalue.js';
+import KeyValue from './keyvalue.mjs';
 
 export default class KeyLocalisation {
     constructor(data) {
