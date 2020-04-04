@@ -101,7 +101,7 @@ function handleUpEvent(event) {
   if (event.code) {
     if (event.code !== 'CapsLock' || !isCapsLockOn) {
       const capsElement = wrapper.querySelector(`#${event.code}`);
-      if (capsElement !== undefined) capsElement.classList.remove('on-key-press');
+      if (capsElement !== null) capsElement.classList.remove('on-key-press');
     }
     return;
   }
