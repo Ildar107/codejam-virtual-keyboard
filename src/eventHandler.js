@@ -70,7 +70,7 @@ function hadnleControl(event, code) {
 }
 
 function handleDown(event) {
-  if (/^(F[0-5])|(Escape)$/.test(event.code)) { return; }
+  if (/^(F[0-9])|(Escape)$/.test(event.code)) { return; }
 
   const wrapper = getWrapper();
   const textarea = getTextarea();
@@ -94,7 +94,7 @@ function handleDown(event) {
 }
 
 function handleUpEvent(event) {
-  if (/^(F[0-5])|(Escape)$/.test(event.code)) { return; }
+  if (/^(F[0-9])|(Escape)$/.test(event.code)) { return; }
   const wrapper = getWrapper();
   const textarea = getTextarea();
 
