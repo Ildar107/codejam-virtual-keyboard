@@ -1,17 +1,27 @@
+body {
+    background-color: #004134;
+    font-family: 'Comic Neue';
+}
+
 .wrapper {
     padding: 10px;
-    margin: 0 auto;
+    margin: 10vh auto;
     width: 80%;
+    display: flex;
+    flex-direction: column;
 }
 
 textarea {
     height: 250px;
-    width: 99.4%;
+    width: 98.4%;
     font-size: 22px;
+    margin: 17px auto;
+    border-radius: 5px;
+    box-shadow: 0 0 5px 6px #101010a6;
 }
 
 .keyboard {
-    height: 350px;
+    height: 392px;
 }
 
 .line {
@@ -24,17 +34,19 @@ textarea {
     height: 55px;
     line-height: 55px;
     font-size: 22px;
-    border: 1px solid #c7d0d4;
-    background-color: #fff;
-    margin: 1px;
-    padding: 5px;
+    box-shadow: 0 0 7px 4px #1b19195c;
+    color: #fff;
+    background: #41948373;
+    margin: 4px;
+    padding: 6px;
     text-align: center;
     border-radius: 5px;
-    transition: border-radius .3s, background-color .5s;
+    transform: scale(1);
+    transition: transform .25s ease-in-out, background-color .25s ease-in-out;
 }
 
 .key:hover {
-    background-color: #525d82;;
+    background-color: #1a695954;;
     color: white;
 }
 
@@ -61,7 +73,7 @@ textarea {
 }
 
 .caps-lock {
-    width: 12%;
+    width: 8%;
 }
 
 .enter {
@@ -83,47 +95,53 @@ textarea {
 
 .arrow-up {
     cursor: pointer;
-    height: 21px;
+    height: 20px;
     line-height: 21px;
     font-size: 15px;
-    border: 1px solid #c7d0d4;
-    background-color: #fff;
-    margin: 1px;
-    padding: 5px;
+    margin: 2px;
+    margin-top: 4px;
+    padding: 6px;
     text-align: center;
     border-radius: 5px;
+    width: 88%;
 }
 
 .arrow-down {
     cursor: pointer;
-    height: 21px;
+    height: 20px;
     line-height: 21px;
     font-size: 15px;
-    border: 1px solid #c7d0d4;
-    background-color: #fff;
-    margin: 1px;
-    padding: 5px;
+    margin: 2px;
+    padding: 6px;
     text-align: center;
     border-radius: 5px;
+    width: 88%;
 }
 
 .arrow-up:hover {
-    background-color: #525d82;;
+    background-color: #1a695954;;
     color: white;
 }
 
 .arrow-down:hover {
-    background-color: #525d82;;
+    background-color: #1a695954;;
     color: white;
 }
 
 .sys{
     font-size: 15px;
+    background: #3f635cb0;
 }
 
 .on-key-press {
-    background-color: #525d82;;
-    color: white;
-    border-radius: 20%;
+    background-color: #1a695954;
+    box-shadow: 0 0 11px 2px white;
+    color: #e4e0e0ed;
+    transform: scale(0.95) translateX(2px) translateY(2px);
+}
 
+.info {
+    color: #8a8a8a;
+    margin-left: 10px;
+    margin-top: 10px;
 }
