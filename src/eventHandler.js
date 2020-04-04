@@ -94,6 +94,7 @@ function handleDown(event) {
 }
 
 function handleUpEvent(event) {
+  if (/^(F[0-5])|(Escape)$/.test(event.code)) { return; }
   const wrapper = getWrapper();
   const textarea = getTextarea();
 
