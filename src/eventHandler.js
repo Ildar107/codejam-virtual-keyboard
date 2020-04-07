@@ -18,8 +18,9 @@ function hadnleControl(event, code) {
     const lang = localStorage.getItem('currentLanguage') || RU;
     const newLang = lang === RU ? EN : RU;
     const keyboardElement = document.querySelector('.keyboard');
+    const selectedButtons = document.querySelectorAll('.on-key-press');
     keyboardElement.innerHTML = '';
-    render(keyboardElement, newLang);
+    render(keyboardElement, newLang, selectedButtons);
     localStorage.setItem('currentLanguage', newLang);
     return;
   }

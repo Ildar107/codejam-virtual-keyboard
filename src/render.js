@@ -45,7 +45,7 @@ function setInnerHtml(key, value, domElement, line) {
   if (key === 'ArrowUp' || key === 'ArrowDown') { appendGroupElement(key, domElement, line); }
 }
 
-export default function render(keyboardElement, lang) {
+export default function render(keyboardElement, lang, selectedButtons) {
   structure.forEach((line) => {
     const lineElement = document.createElement('div');
     lineElement.classList.add('line');
@@ -59,4 +59,10 @@ export default function render(keyboardElement, lang) {
       setInnerHtml(key, value, btn, lineElement);
     });
   });
+  if (selectedButtons) {
+    selectedButtons.forEach((x) => {
+      const element = document.querySelector(`#${x.getAttribute('id')}`);
+      if (element !== null) element.classList.add('on-key-press');
+    });
+  }
 }
