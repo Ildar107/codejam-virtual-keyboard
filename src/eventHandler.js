@@ -89,7 +89,12 @@ function handleDown(event) {
     textarea.value += (event.shiftKey || isCapsLockOn
       ? upperValue
       : value);
-  } else { hadnleControl(event, code); }
+  } else {
+    hadnleControl(event, code);
+    if (event.altKey && event.shiftKey) {
+      document.querySelectorAll('.key').forEach((x) => x.addEventListener('mousedown', handleDown));
+    }
+  }
 
   event.preventDefault();
 }
